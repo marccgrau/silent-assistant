@@ -1,0 +1,24 @@
+# Silent advisor non-secret settings.
+# Copy this file to config.toml and customize for your environment.
+
+[advisor]
+model = "gpt-5-mini-2025-08-07"
+prompt_file = "prompts/advisor_system_prompt.txt"
+
+[deepgram]
+model = "nova-3-general"
+diarize = true
+paragraphs = true
+punctuate = true
+smart_format = true
+
+[supabase]
+url = "https://your-project.supabase.co"
+bucket = "call-audio"
+audio_folder = "calls"
+
+[participants]
+customer_speaker_label = ""
+agent_speaker_label = ""
+agent_id = ""
+customer_id = ""
