@@ -3,7 +3,7 @@
 
 ## Conversation & Pipeline Plan
 - Transport audio in/out as today but **no audio out** from the bot; only listen/observe.
-- Deepgram STT with diarization enabled; capture speaker labels, timestamps, confidence. Maintain a rolling transcript buffer with speaker tags.
+- Deepgram STT with diarization enabled (Nova models, e.g., nova-3-general; Flux does not support diarization); capture speaker labels, timestamps, confidence. Maintain a rolling transcript buffer with speaker tags.
 - Identify the “customer” speaker (e.g., first non-agent utterance, or via transport metadata if available) and route only customer finalized utterances to the advisor logic.
 - On finalized customer utterance:
   - Build an LLM prompt with recent transcript (both speakers), conversation goals/guardrails, and produce concise agent guidance + optional short rationale.

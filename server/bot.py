@@ -47,12 +47,18 @@ from pipecat.processors.frameworks.rtvi import (
     RTVIServerMessageFrame,
 )
 from pipecat.runner.types import DailyRunnerArguments, RunnerArguments, SmallWebRTCRunnerArguments
-from pipecat.services.deepgram.flux.stt import DeepgramFluxSTTService
+from pipecat.services.deepgram.stt import DeepgramSTTService
 from pipecat.transports.base_transport import BaseTransport, TransportParams
 from pipecat.transports.daily.transport import DailyParams, DailyTransport
 from pipecat.transports.smallwebrtc.connection import SmallWebRTCConnection
 from pipecat.transports.smallwebrtc.transport import SmallWebRTCTransport
 from supabase import Client, create_client
+
+try:
+    # Deepgram SDK (LiveOptions) - required for diarization settings
+    from deepgram import LiveOptions
+except Exception:  # pragma: no cover - defensive import
+    LiveOptions = None
 
 load_dotenv(override=True)
 
@@ -73,6 +79,7 @@ DEFAULT_CONFIG: Dict[str, Any] = {
         "prompt_file": str(DEFAULT_PROMPT_PATH),
     },
     "deepgram": {
+        # Use Nova models for diarization (Flux does not support diarization)
         "model": "nova-3-general",
         "diarize": True,
         "paragraphs": True,
@@ -458,20 +465,26 @@ async def run_bot(transport: BaseTransport):
     else:
         logger.warning("OPENAI_API_KEY not set; advice generation disabled.")
 
-    deepgram_options = {
-        "diarize": deepgram_cfg.get("diarize", True),
-        "punctuate": deepgram_cfg.get("punctuate", True),
-        "smart_format": deepgram_cfg.get("smart_format", True),
-        "paragraphs": deepgram_cfg.get("paragraphs", True),
-        "model": deepgram_cfg.get("model", DEFAULT_CONFIG["deepgram"]["model"]),
-    }
-    try:
-        stt = DeepgramFluxSTTService(
-            api_key=os.getenv("DEEPGRAM_API_KEY", ""), options=deepgram_options
+    deepgram_live_options = None
+    if LiveOptions:
+        deepgram_live_options = LiveOptions(
+            model=deepgram_cfg.get("model", DEFAULT_CONFIG["deepgram"]["model"]),
+            diarize=deepgram_cfg.get("diarize", True),
+            paragraphs=deepgram_cfg.get("paragraphs", True),
+            punctuate=deepgram_cfg.get("punctuate", True),
+            smart_format=deepgram_cfg.get("smart_format", True),
+            encoding="linear16",
+            channels=1,
+            interim_results=True,
+            vad_events=False,
         )
-    except TypeError:
-        logger.warning("DeepgramFluxSTTService does not accept 'options'; using defaults.")
-        stt = DeepgramFluxSTTService(api_key=os.getenv("DEEPGRAM_API_KEY", ""))
+    else:
+        logger.warning("Deepgram SDK LiveOptions not available; using default STT options.")
+
+    stt = DeepgramSTTService(
+        api_key=os.getenv("DEEPGRAM_API_KEY", ""),
+        live_options=deepgram_live_options,
+    )
 
     rtvi = RTVIProcessor()
     recorder = InputAudioRecorder()

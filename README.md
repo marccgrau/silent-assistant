@@ -7,7 +7,7 @@ A Pipecat voice agent running as a **silent advisor**: listens to a two-human ca
 - **Bot Type**: Web (silent, listen-only)
 - **Transports**: Daily (WebRTC), SmallWebRTC
 - **Pipeline**:
-  - STT: Deepgram Flux with diarization
+  - STT: Deepgram Nova (e.g., nova-3-general) with diarization (Flux does not support diarization)
   - LLM: OpenAI (advisor prompt loaded from `server/prompts/`)
   - TTS: none (advisor emits RTVI JSON only)
 - **Features**: audio recording (merged WAV), diarized transcription, agent advice via RTVI `server-message`, Supabase logging, smart-turn v3
@@ -34,7 +34,8 @@ cp .env.example .env
 cp config.example.toml config.toml
 # Edit Deepgram options, advisor model, Supabase URL/bucket, participant hints, etc.
 # Update prompts/advisor_system_prompt.txt for custom behavior.
-```
+# Note: diarization requires Nova models (Flux not supported).
+  ```
 5) **Run**:
 ```bash
 uv run bot.py --transport daily        # or
